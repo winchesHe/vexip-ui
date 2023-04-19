@@ -1,11 +1,4 @@
-import { resolve } from 'node:path'
-import { readFileSync } from 'node:fs'
 import { toKebabCase } from '@vexip-ui/utils'
-import { splitVendorChunkPlugin } from 'vite'
-import vueJsx from '@vitejs/plugin-vue-jsx'
-import i18n from '@intlify/unplugin-vue-i18n/vite'
-import autoprefixer from 'autoprefixer'
-import discardCss from 'postcss-discard-duplicates'
 import { highlight } from './build/highlight'
 import { markdownItSetup } from './build/markdown'
 import { getGuideConfig } from './config/guide'
@@ -13,63 +6,7 @@ import { getComponentConfig } from './config/component'
 
 import type { UserConfig } from 'vitepress'
 
-const useServer = process.env.NODE_ENV === 'development'
-const docsRoot = resolve(__dirname, '..')
-
-const pkg = JSON.parse(readFileSync(resolve(docsRoot, '../package.json'), 'utf-8'))
-
 export default <UserConfig>{
-  vite: {
-    define: {
-      __SSR__: JSON.stringify(process.env.SSR === 'true'),
-      __ROLLBACK_LANG__: JSON.stringify('zh-CN'),
-      __VERSION__: JSON.stringify(pkg.version || '')
-    },
-    resolve: {
-      alias: [
-        { find: /^@docs\/(.+)/, replacement: resolve(docsRoot, '$1') },
-        ...(useServer
-          ? [
-              { find: /^@\/(.+)/, replacement: resolve(docsRoot, '../$1') },
-              {
-                find: /^@vexip-ui\/((?!icons).+)/,
-                replacement: resolve(docsRoot, '../common/$1/src')
-              },
-              { find: /^vexip-ui$/, replacement: resolve(docsRoot, '../index.ts') }
-            ]
-          : [])
-      ],
-      dedupe: useServer ? ['../components', 'vue'] : ['vue']
-    },
-    optimizeDeps: {
-      include: ['@vexip-ui/icons']
-    },
-    esbuild: {
-      drop: ['debugger'],
-      pure: ['console.log']
-    },
-    server: {
-      port: 9000,
-      host: '0.0.0.0'
-    },
-    build: {
-      reportCompressedSize: false,
-      chunkSizeWarningLimit: 10 * 1024
-    },
-    css: {
-      postcss: {
-        plugins: [autoprefixer, ...(useServer ? [] : [discardCss])]
-      }
-    },
-    plugins: [
-      vueJsx(),
-      splitVendorChunkPlugin(),
-      i18n({
-        compositionOnly: false,
-        include: resolve(docsRoot, 'i18n')
-      })
-    ]
-  },
   head: [
     ['meta', { 'http-equiv': 'Expires', content: '0' }],
     ['meta', { 'http-equiv': 'Pragma', content: 'no-cache' }],
@@ -78,13 +15,17 @@ export default <UserConfig>{
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/vexip-ui.svg' }]
   ],
   titleTemplate: 'Vexip UI',
-  lastUpdated: true,
   markdown: {
-    // typographer: false,
     highlight,
     config: markdownItSetup
   },
   themeConfig: {
+    /**
+     * 自定义配置信息
+     * asideMenus 侧边栏菜单
+     */
+    asideMenus: getAsideMenus(),
+
     nav: [
       { key: 'guides', i18n: 'common.guides', link: '/guide/setup', activeMatch: '/guide/' },
       {
@@ -95,7 +36,6 @@ export default <UserConfig>{
       },
       { key: 'playground', i18n: 'common.playground', link: 'https://playground.vexipui.com' }
     ],
-    asideMenus: getAsideMenus(),
     outline: {
       '/guide/': 2,
       '/component/': 3
