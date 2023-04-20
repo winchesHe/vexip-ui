@@ -1,7 +1,7 @@
 import './style/index.scss'
 
 import { withBase } from 'vitepress'
-import { install, Loading } from 'vexip-ui'
+import { install as VexipUI, Loading } from 'vexip-ui'
 import { isClient, isColor } from '@vexip-ui/utils'
 import prismjs from 'prismjs'
 import { langOptions, i18n, vexipuiLocale } from './i18n'
@@ -50,7 +50,7 @@ function enhanceApp(app: App) {
     .component('AudioButton', AudioButton)
     .component('IconDemo', IconDemo)
     .use(i18n)
-    .use(install, {
+    .use(VexipUI, {
       locale: vexipuiLocale,
       props: {
         default: {
